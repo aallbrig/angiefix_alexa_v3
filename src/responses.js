@@ -31,6 +31,10 @@ function saveDataBeforeExiting(event, context) {
   });
 }
 
+function setData({sessionAttributes = {}, name='', value=''}) {
+  return sessionAttributes[name] = value;
+}
+
 function _getMissingInformation(draftLead = {}, userInfo = {}) {
   let response = {
     shouldEndSession: false
@@ -69,12 +73,12 @@ export function onLaunch(launchRequest, session, callback) {
   const getDraftLeadState = _getMissingInformation(sessionAttributes.draftLead, sessionAttributes.userInfo);
   sessionAttributes.previous.question = getDraftLeadState.outputSpeech;
   sessionAttributes.previous.draftLead = sessionAttributes.draftLead;
-  const speechOutput = `Hello user: <say-as interpret-as="spell-out">${session.user.userId.substring(10, 15)}</say-as>. ${getDraftLeadState.outputSpeech}`;
+  const outputSpeech = `Hello there user: <say-as interpret-as="spell-out">${session.user.userId.substring(10, 15)}</say-as>. ${getDraftLeadState.outputSpeech}`;
   const repromptText = `${getDraftLeadState.repromptText}`;
   const shouldEndSession = !!getDraftLeadState.shouldEndSession;
 
   callback(sessionAttributes,
-      buildSSMLSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
+      buildSSMLSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
 }
 
 /**
@@ -119,25 +123,25 @@ function clearUserData(intent, session, callback) {
   let sessionAttributes = extend({
     previous: {}
   }, session.attributes);
-  var speechOutput = "clear User Data";
+  var outputSpeech = "clear User Data";
   var repromptText = "clear User Data";
   var cardTitle = "clear User Data";
   var shouldEndSession = false;
 
   callback(sessionAttributes,
-      buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
+      buildSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
 }
 function clearDraftData(intent, session, callback) {
   let sessionAttributes = extend({
     previous: {}
   }, session.attributes);
-  var speechOutput = "clear draft Data";
+  var outputSpeech = "clear draft Data";
   var repromptText = "clear draft Data";
   var cardTitle = "clear draft Data";
   var shouldEndSession = false;
 
   callback(sessionAttributes,
-      buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
+      buildSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
 }
 function collectDescription(intent, session, callback) {
   let sessionAttributes = extend({
@@ -145,13 +149,13 @@ function collectDescription(intent, session, callback) {
   }, session.attributes);
   let draftLead = extend(defaultDraftLead, sessionAttributes.draftLead);
   sessionAttributes.previous.draftLead = draftLead;
-  let speechOutput = '';
+  let outputSpeech = '';
   let repromptText = '';
   const cardTitle = 'Collect description.';
   if (intent.slots.description) {
     draftLead.description = intent.slots.description.value;
     draftLead.title = `Alexa Lead - ${draftLead.description.substring(0, 40)}...`;
-    speechOutput += ` You said you need: ${draftLead.description}`;
+    outputSpeech += ` You said you need: ${draftLead.description}`;
     regexToUrgency.forEach(urgency => {
       if (urgency.regex.test(draftLead.description)) {
         console.log('Urgency identified!');
@@ -170,7 +174,7 @@ function collectDescription(intent, session, callback) {
   }
   sessionAttributes.draftLead = extend(sessionAttributes.draftLead, draftLead);
   const getDraftLeadState = _getMissingInformation(sessionAttributes.draftLead);
-  speechOutput += getDraftLeadState.outputSpeech;
+  outputSpeech += getDraftLeadState.outputSpeech;
   repromptText += getDraftLeadState.repromptText;
   sessionAttributes.previous.question = getDraftLeadState.outputSpeech;
   const shouldEndSession = !!getDraftLeadState.shouldEndSession;
@@ -182,24 +186,24 @@ function collectDescription(intent, session, callback) {
     console.log(appData);
     saveAppData(userId, appData, function () {
       callback(sessionAttributes,
-          buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
+          buildSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
     });
   } else {
     callback(sessionAttributes,
-        buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
+        buildSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
   }
 }
 function helpIntent(session, callback) {
   let sessionAttributes = extend({
     previous: {}
   }, session.attributes);
-  var speechOutput = "Help";
+  var outputSpeech = "Help";
   var repromptText = "Help";
   var cardTitle = "Help";
   var shouldEndSession = true;
 
   callback(sessionAttributes,
-      buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
+      buildSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
 }
 function yesIntent(session, callback) {
   let sessionAttributes = extend({
@@ -209,12 +213,16 @@ function yesIntent(session, callback) {
   const previousQuestion = sessionAttributes.previous.question;
   const previousDraftLead = sessionAttributes.previous.draftLead;
   if (!previousQuestion){
-    var speechOutput = "Yes";
+    var outputSpeech = "Yes";
     var repromptText = "Yes";
     var shouldEndSession = true;
   } else if (previousQuestion === yesNoQuestions['getSubmit']) {
     const followUpQuestion = yesNoQuestions['getStartAnother'];
-    var speechOutput = `Your project has been submitted! ${followUpQuestion}`;
+    var outputSpeech = `Your project has been submitted! ${followUpQuestion}`;
+    sessionAttributes.draftLead = extend({
+      submissionTime: new Date()
+    }, sessionAttributes.draftLead);
+    sessionAttributes.projects = [...[], ...sessionAttributes.projects];
     sessionAttributes.projects.push(sessionAttributes.draftLead);
     sessionAttributes.draftLead = defaultDraftLead;
     sessionAttributes.previous = {};
@@ -224,11 +232,11 @@ function yesIntent(session, callback) {
   } else if (previousQuestion === yesNoQuestions['getStartAnother']) {
     const getDraftLeadState = _getMissingInformation(sessionAttributes.draftLead, sessionAttributes.userInfo);
     sessionAttributes.previous.question = getDraftLeadState.outputSpeech;
-    var speechOutput = getDraftLeadState.outputSpeech;
+    var outputSpeech = getDraftLeadState.outputSpeech;
     var repromptText = getDraftLeadState.repromptText;
     var shouldEndSession = !!getDraftLeadState.shouldEndSession;
   } else {
-    var speechOutput = "Yes";
+    var outputSpeech = "Yes";
     var repromptText = "Yes";
     var shouldEndSession = true;
   }
@@ -240,18 +248,18 @@ function yesIntent(session, callback) {
     console.log(appData);
     saveAppData(userId, appData, function () {
       callback(sessionAttributes,
-          buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
+          buildSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
     });
   } else {
     callback(sessionAttributes,
-        buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
+        buildSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
   }
 }
 function noIntent(session, callback) {
   let sessionAttributes = extend({
     previous: {}
   }, session.attributes);
-  var speechOutput = "No";
+  var outputSpeech = "No";
   var repromptText = "No";
   var cardTitle = "No";
   var shouldEndSession = true;
@@ -263,11 +271,11 @@ function noIntent(session, callback) {
     console.log(appData);
     saveAppData(userId, appData, function () {
       callback(sessionAttributes,
-          buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
+          buildSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
     });
   } else {
     callback(sessionAttributes,
-        buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
+        buildSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
   }
 }
 

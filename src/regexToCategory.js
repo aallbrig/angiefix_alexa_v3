@@ -90,7 +90,7 @@ export const regexToCategory =  [
     categoryId: '98'
   },
   {
-    regex: /^(?=.*\b(outside)\b)(?=.*\b(paint|painting)).*$/i,
+    regex: /^(?=.*\b(exterior|outside)\b)(?=.*\b(paint|painting)).*$/i,
     name: 'Painting - Exterior',
     categoryId: '293'
   },

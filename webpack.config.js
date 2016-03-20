@@ -1,18 +1,21 @@
 
-var path = require("path");
+var path = require('path');
 var webpack = require('webpack');
 var ignore = new webpack.IgnorePlugin(/^(aws-sdk|dynamodb-doc)$/);
 
 module.exports = {
   entry: './src/main.js',
   output: {
-    path: path.join(__dirname, "dist"),
-    library: "[name]",
-    libraryTarget: "commonjs2",
-    filename: "[name].js"
+    path: path.join(__dirname, 'dist'),
+    library: '[name]',
+    libraryTarget: 'commonjs2',
+    filename: '[name].js'
   },
-  target: "node",
+  target: 'node',
   module: {
+    preLoaders: [
+      {test: /\.js$/, loader: 'eslint-loader', exclude: /node_modules/}
+    ],
     loaders: [
       {
         test: /\.js$/,
@@ -28,6 +31,8 @@ module.exports = {
       }
     ]
   },
-  plugins: [ignore]
-//  plugins: [ignore, new webpack.optimize.UglifyJsPlugin({minimize: true})]
+  plugins: [ignore],
+  eslint: {
+    configFile: '.eslintrc'
+  }
 };
