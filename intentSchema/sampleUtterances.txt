@@ -1,0 +1,10 @@
+CollectDescription I need {a plumber to fix my toilet|description}
+CollectDescription I need {a roofer to help put on shingles|description}
+CollectDescription I need {a roofer to go up on the roof and replace my terracotta shingles with wooden ones|description}
+CollectDescription My project description is I need someone to {help put on shingles|description}
+ClearDraftData clear draft data
+ClearUserData clear user data
+AMAZON.HelpIntent help
+AMAZON.StopIntent stop
+AMAZON.YesIntent send
+AMAZON.NoIntent send

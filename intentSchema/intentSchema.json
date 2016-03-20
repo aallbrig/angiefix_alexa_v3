@@ -1,0 +1,31 @@
+{
+  "intents": [
+    {
+      "intent": "CollectDescription",
+      "slots": [
+        {
+          "name": "description",
+          "type": "AMAZON.LITERAL"
+        }
+      ]
+    },
+    {
+      "intent": "ClearDraftData"
+    },
+    {
+      "intent": "ClearUserData"
+    },
+    {
+      "intent": "AMAZON.HelpIntent"
+    },
+    {
+      "intent": "AMAZON.StopIntent"
+    },
+    {
+      "intent": "AMAZON.YesIntent"
+    },
+    {
+      "intent": "AMAZON.NoIntent"
+    }
+  ]
+}
