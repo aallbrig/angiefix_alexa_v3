@@ -1,14 +1,14 @@
-var AWS = require("aws-sdk");
-var DOC = require("dynamodb-doc");
-var docClient = new DOC.DynamoDB();
+import { defaultAppUserData } from './models';
+const AWS = require('aws-sdk');
+const DOC = require('dynamodb-doc');
+const docClient = new DOC.DynamoDB();
 const extend = require('lodash/extend');
-import {defaultAppUserData} from './models';
 
 function getAppData(userId, callback) {
   docClient.getItem({
-    "TableName": "angieFixV2",
-    "Key": {
-      "userId": userId
+    TableName: 'angieFixV2',
+    Key: {
+      userId: userId
     }
   }, function(err, data) {
     if (err) {
@@ -24,17 +24,17 @@ function getAppData(userId, callback) {
 
 function saveAppData(userId, appData, callback) {
   const dataToBeSaved = extend({
-    "userId": userId
+    userId: userId
   }, defaultAppUserData, appData);
   console.log('data to be saved');
   console.log(dataToBeSaved);
   docClient.putItem({
-    "TableName": "angieFixV2",
-    "Item": {
-      "userId": userId,
-      "draftLead": dataToBeSaved.draftLead,
-      "userInfo": dataToBeSaved.userInfo,
-      "projects": dataToBeSaved.projects
+    TableName: 'angieFixV2',
+    Item: {
+      userId: userId,
+      draftLead: dataToBeSaved.draftLead,
+      userInfo: dataToBeSaved.userInfo,
+      projects: dataToBeSaved.projects
     }
   }, function(err, data) {
     if (err) {
@@ -49,6 +49,6 @@ function saveAppData(userId, appData, callback) {
 }
 
 module.exports = {
-  getAppData: getAppData,
-  saveAppData: saveAppData
-}
+  getAppData,
+  saveAppData
+};

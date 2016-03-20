@@ -1,4 +1,4 @@
-export const regexToCategory =  [
+export const regexToCategory = [
   {
     regex: /(appliance|repair)/i,
     name: 'Appliance Repair',

@@ -55,15 +55,13 @@ export function main(event, context) {
           console.log(`cannot get data for user with id: ${userId}`);
           console.log(err);
           event.session.attributes = {};
-          console.log('new event.session');
-          console.log(event.session.attributes);
         } else if (data) {
-          console.log('got data for user with id: ' + userId);
+          console.log(`got data for user with id: ${userId}`);
           console.log(data);
           event.session.attributes = data.Item;
-          console.log('new event.session');
-          console.log(event.session.attributes);
         }
+        console.log('new event.session');
+        console.log(event.session.attributes);
         routeEventByRequestType(event, context);
       });
     } else {
