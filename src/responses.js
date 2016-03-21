@@ -137,7 +137,7 @@ function _getMissingInformation(draftLead = defaultDraftLead, userInfo = default
 
 // --------------- Functions that control the skill's behavior -----------------------
 function clearUserData(intent, session, callback) {
-  const sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
+  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
   const outputSpeech = 'clearing user data';
   const repromptText = '';
   const cardTitle = 'Clearing User Data';
@@ -159,7 +159,7 @@ function clearUserData(intent, session, callback) {
   }
 }
 function clearDraftData(intent, session, callback) {
-  const sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
+  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
   sessionAttributes.draftLead = defaultDraftLead;
   const outputSpeech = 'clearing draft Data';
   const repromptText = '';
@@ -181,7 +181,7 @@ function clearDraftData(intent, session, callback) {
   }
 }
 function collectDescription(intent, session, callback) {
-  const sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
+  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
   const draftLead = extend({}, defaultDraftLead, sessionAttributes.draftLead);
   sessionAttributes.previous.draftLead = draftLead;
   let outputSpeech = '';
@@ -190,7 +190,7 @@ function collectDescription(intent, session, callback) {
   if (intent.slots.description) {
     draftLead.description = intent.slots.description.value;
     draftLead.title = `Alexa Lead - ${draftLead.description.substring(0, 40)}...`;
-    outputSpeech += ` You said you need: ${draftLead.description}`;
+    outputSpeech += `Description: ${draftLead.description}`;
     // Extract ugency, if possible
     regexToUrgency.forEach(urgency => {
       if (urgency.regex.test(draftLead.description)) {
@@ -233,9 +233,10 @@ function collectDescription(intent, session, callback) {
       buildSSMLSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
   }
 }
+
 function collectPhoneNumberOrPostalCode(intent, session, callback) {
   console.log('collectPhoneNumberOrPostalCode!');
-  const sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
+  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
   const draftLead = extend({}, defaultDraftLead, sessionAttributes.draftLead);
   console.log('draft lead');
   console.log(draftLead);
@@ -252,17 +253,20 @@ function collectPhoneNumberOrPostalCode(intent, session, callback) {
     draftLead.phone = intent.slots.phoneNumberOrPostalCode.value;
     userInfo.phone = intent.slots.phoneNumberOrPostalCode.value;
     console.log(`phone number collected! ${draftLead.phone}`);
-    outputSpeech += ` You said: <say-as interpret-as="spell-out">${draftLead.phone}</say-as>. `;
+    outputSpeech += ` Phone: <say-as interpret-as="spell-out">${draftLead.phone}</say-as>. `;
   } else if (intent.slots.phoneNumberOrPostalCode &&
     intent.slots.phoneNumberOrPostalCode.value.match(validation.postalCode))
   {
     draftLead.address.postalCode = intent.slots.phoneNumberOrPostalCode.value;
     userInfo.address.postalCode = intent.slots.phoneNumberOrPostalCode.value;
     console.log(`postal code collected! ${draftLead.address.postalCode}`);
-    outputSpeech += ` You said: <say-as interpret-as="spell-out">${draftLead.address.postalCode}</say-as>. `;
+    outputSpeech += ` Zip code: <say-as interpret-as="spell-out">${draftLead.address.postalCode}</say-as>. `;
   }
-  sessionAttributes.draftLead = extend({}, sessionAttributes.draftLead, draftLead);
-  const getDraftLeadState = _getMissingInformation(sessionAttributes.draftLead, sessionAttributes.userInfo);
+  sessionAttributes = extend({}, sessionAttributes, {draftLead, userInfo});
+  const getDraftLeadState = _getMissingInformation(
+    sessionAttributes.draftLead,
+    sessionAttributes.userInfo
+  );
   outputSpeech += getDraftLeadState.outputSpeech;
   repromptText += getDraftLeadState.repromptText;
   sessionAttributes.previous.question = getDraftLeadState.outputSpeech;
@@ -282,9 +286,10 @@ function collectPhoneNumberOrPostalCode(intent, session, callback) {
       buildSSMLSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
   }
 }
+
 function collectStreetAddress(intent, session, callback) {
   console.log('collectStreetAddress!');
-  const sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
+  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
   const draftLead = extend({}, defaultDraftLead, sessionAttributes.draftLead);
   const userInfo = extend({}, defaultUserInfo, sessionAttributes.userInfo);
   sessionAttributes.previous.draftLead = draftLead;
@@ -297,8 +302,11 @@ function collectStreetAddress(intent, session, callback) {
     console.log(`street address exists! ${draftLead.address.streetAddress}`);
     outputSpeech += ` You said: ${draftLead.address.streetAddress}. `;
   }
-  sessionAttributes.draftLead = extend({}, sessionAttributes.draftLead, draftLead);
-  const getDraftLeadState = _getMissingInformation(sessionAttributes.draftLead, sessionAttributes.userInfo);
+  sessionAttributes = extend({}, sessionAttributes, {draftLead, userInfo});
+  const getDraftLeadState = _getMissingInformation(
+    sessionAttributes.draftLead,
+    sessionAttributes.userInfo
+  );
   outputSpeech += getDraftLeadState.outputSpeech;
   repromptText += getDraftLeadState.repromptText;
   sessionAttributes.previous.question = getDraftLeadState.outputSpeech;
@@ -318,16 +326,91 @@ function collectStreetAddress(intent, session, callback) {
       buildSSMLSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
   }
 }
+
 function helpIntent(session, callback) {
-  const sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
+  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
   const outputSpeech = 'Help';
   const repromptText = 'Help';
   const cardTitle = 'Help';
   const shouldEndSession = true;
 
-  callback(sessionAttributes,
+  if (shouldEndSession) {
+    const userId = session.user.userId;
+    const appData = sessionAttributes;
+    console.log('app data for ending session: ');
+    console.log(appData);
+    saveAppData(userId, appData, () => {
+      callback(sessionAttributes,
+        buildSSMLSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
+    });
+  } else {
+    callback(sessionAttributes,
       buildSSMLSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
+  }
 }
+
+function repeatIntent(session, callback) {
+  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
+  console.log('repeatIntent ');
+  const cardTitle = 'Repeat';
+
+  const getDraftLeadState = _getMissingInformation(
+    sessionAttributes.draftLead,
+    sessionAttributes.userInfo
+  );
+  sessionAttributes.previous.question = getDraftLeadState.outputSpeech;
+  const outputSpeech = `I asked... ${getDraftLeadState.outputSpeech}`;
+  const repromptText = getDraftLeadState.repromptText;
+  const shouldEndSession = !!getDraftLeadState.shouldEndSession;
+
+  if (shouldEndSession) {
+    const userId = session.user.userId;
+    const appData = sessionAttributes;
+    console.log('app data for ending session: ');
+    console.log(appData);
+    saveAppData(userId, appData, () => {
+      callback(sessionAttributes,
+          buildSSMLSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
+    });
+  } else {
+    callback(sessionAttributes,
+        buildSSMLSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
+  }
+}
+
+function startOverIntent(session, callback) {
+  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
+  const userInfo = extend({}, defaultUserInfo, sessionAttributes.userInfo);
+  console.log('startOverIntent ');
+  const cardTitle = 'Restart';
+
+  sessionAttributes.draftLead = defaultDraftLead;
+  sessionAttributes.previous = {};
+  const getDraftLeadState = _getMissingInformation(
+    sessionAttributes.draftLead,
+    sessionAttributes.userInfo
+  );
+  sessionAttributes.previous.question = getDraftLeadState.outputSpeech;
+  const outputSpeech = `Restart.  ${getDraftLeadState.outputSpeech}`;
+  const repromptText = getDraftLeadState.repromptText;
+  const shouldEndSession = !!getDraftLeadState.shouldEndSession;
+
+
+  if (shouldEndSession) {
+    const userId = session.user.userId;
+    const appData = sessionAttributes;
+    console.log('app data for ending session: ');
+    console.log(appData);
+    saveAppData(userId, appData, () => {
+      callback(sessionAttributes,
+          buildSSMLSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
+    });
+  } else {
+    callback(sessionAttributes,
+        buildSSMLSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
+  }
+}
+
 function yesIntent(session, callback) {
   let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
   const userInfo = extend({}, defaultUserInfo, sessionAttributes.userInfo);
@@ -430,13 +513,13 @@ function yesIntent(session, callback) {
         buildSSMLSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
   }
 }
+
 function noIntent(session, callback) {
   let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
   const userInfo = extend({}, defaultUserInfo, sessionAttributes.userInfo);
   console.log('No intent user info: ');
   console.log(userInfo);
   const draftLead = extend({}, defaultDraftLead, sessionAttributes.draftLead);
-  console.log('No intent user info: ');
   const cardTitle = 'No';
   const previousQuestion = sessionAttributes.previous.question;
   console.log('No intent previous question: ');
@@ -444,6 +527,7 @@ function noIntent(session, callback) {
   let outputSpeech;
   let repromptText;
   let shouldEndSession;
+
   if (previousQuestion === QUESTIONS.confirmStreetAddress(userInfo.address.streetAddress)) {
     userInfo.address.streetAddress = defaultUserInfo.address.streetAddress;
     sessionAttributes = extend({}, sessionAttributes, {draftLead, userInfo});
@@ -455,6 +539,7 @@ function noIntent(session, callback) {
     outputSpeech = getDraftLeadState.outputSpeech;
     repromptText = getDraftLeadState.repromptText;
     shouldEndSession = !!getDraftLeadState.shouldEndSession;
+
   } else if (previousQuestion === QUESTIONS.confirmPhoneNumber(userInfo.phone)) {
     userInfo.phone = defaultUserInfo.phone;
     sessionAttributes = extend({}, sessionAttributes, {draftLead, userInfo});
@@ -505,7 +590,7 @@ function noIntent(session, callback) {
 export function onLaunch(launchRequest, session, callback) {
   console.log(`onLaunch requestId=${launchRequest.requestId}, sessionId=${session.sessionId}`);
 
-  const sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
+  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
   console.log('on launch session object');
   console.log(session);
   console.log('on launch session attributes object');
@@ -543,6 +628,10 @@ export function onIntent(event, context, callback) {
     clearDraftData(intent, session, callback);
   } else if (intentName === 'CollectDescription') {
     collectDescription(intent, session, callback);
+  } else if (intentName === 'AMAZON.RepeatIntent') {
+    repeatIntent(session, callback);
+  } else if (intentName === 'AMAZON.StartOverIntent') {
+    startOverIntent(session, callback);
   } else if (intentName === 'AMAZON.HelpIntent') {
     helpIntent(session, callback);
   } else if (intentName === 'AMAZON.StopIntent') {

@@ -2,6 +2,10 @@ CollectDescription I need {a plumber to fix my toilet|description}
 CollectDescription I need {a roofer to help put on shingles|description}
 CollectDescription I need {a roofer to go up on the roof and replace my terracotta shingles with wooden ones|description}
 CollectDescription My project description is I need someone to {help put on shingles|description}
+CollectDescription {I need a plumber to fix my toilet|description}
+CollectDescription {I need a roofer to help put on shingles|description}
+CollectDescription {I need a roofer to go up on the roof and replace my terracotta shingles with wooden ones|description}
+CollectDescription My project description is I need someone to {help put on shingles|description}
 CollectPhoneNumberOrPostalCode My number is {phoneNumberOrPostalCode}
 CollectPhoneNumberOrPostalCode My phone number is {phoneNumberOrPostalCode}
 CollectPhoneNumberOrPostalCode My zip code is {phoneNumberOrPostalCode}

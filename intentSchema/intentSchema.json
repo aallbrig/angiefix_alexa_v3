@@ -34,6 +34,12 @@
       "intent": "ClearUserData"
     },
     {
+      "intent": "AMAZON.RepeatIntent"
+    },
+    {
+      "intent": "AMAZON.StartOverIntent"
+    },
+    {
       "intent": "AMAZON.HelpIntent"
     },
     {
