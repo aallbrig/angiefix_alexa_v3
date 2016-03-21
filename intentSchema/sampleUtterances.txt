@@ -5,6 +5,14 @@ CollectDescription My project description is I need someone to {help put on shin
 CollectDescription {I need a plumber to fix my toilet|description}
 CollectDescription {I need a roofer to help put on shingles|description}
 CollectDescription {I need a roofer to go up on the roof and replace my terracotta shingles with wooden ones|description}
+ListCategories What categories
+ListCategories What are your categories
+ListCategories Supported categories
+ListCategories Categories
+ListCategories More
+CollectCategory {category}
+CollectCategory It's {category}
+CollectCategory It's a {category} project
 CollectDescription My project description is I need someone to {help put on shingles|description}
 CollectPhoneNumberOrPostalCode My number is {phoneNumberOrPostalCode}
 CollectPhoneNumberOrPostalCode My phone number is {phoneNumberOrPostalCode}

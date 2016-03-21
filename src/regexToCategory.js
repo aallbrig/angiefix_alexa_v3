@@ -21,7 +21,7 @@ export const regexToCategory = [
   },
   {
     regex: /(deck|porch)/i,
-    name: 'Decks & Porches',
+    name: 'Decks and Porches',
     categoryId: '47'
   },
   {
@@ -41,7 +41,7 @@ export const regexToCategory = [
   },
   {
     regex: /(floor)/i,
-    name: 'Flooring Sales/Installation/Repair',
+    name: 'Flooring Sales, Installation, Repair',
     categoryId: '63'
   },
   {
@@ -51,7 +51,7 @@ export const regexToCategory = [
   },
   {
     regex: /(gutter)/i,
-    name: 'Gutter Repair & Replacement',
+    name: 'Gutter Repair and Replacement',
     categoryId: '74'
   },
   {
@@ -61,7 +61,7 @@ export const regexToCategory = [
   },
   {
     regex: /(AC|air\s*conditioning)/i,
-    name: 'Heating & A/C',
+    name: 'Heating and A C',
     categoryId: '78'
   },
   {
@@ -81,7 +81,7 @@ export const regexToCategory = [
   },
   {
     regex: /(landscaping|landscaper|lawn)/i,
-    name: 'Lawn & Yard Work',
+    name: 'Lawn and Yard Work',
     categoryId: '86'
   },
   {
@@ -91,17 +91,17 @@ export const regexToCategory = [
   },
   {
     regex: /^(?=.*\b(exterior|outside)\b)(?=.*\b(paint|painting)).*$/i,
-    name: 'Painting - Exterior',
+    name: 'Painting Exterior',
     categoryId: '293'
   },
   {
     regex: /^(?=.*\b(interior|inside)\b)(?=.*\b(paint|painting)).*$/i,
-    name: 'Painting - Interior',
+    name: 'Painting Interior',
     categoryId: '294'
   },
   {
     regex: /(exterminator|pest|bugs)/i,
-    name: 'Pest Control/Exterminating',
+    name: 'Pest Control and Exterminating',
     categoryId: '58'
   },
   {
@@ -111,12 +111,12 @@ export const regexToCategory = [
   },
   {
     regex: /(remodel|remodeling)/i,
-    name: 'Remodeling - General',
+    name: 'Remodeling. General',
     categoryId: '111'
   },
   {
     regex: /^(?=.*\b(remodel|remodeler)\b)(?=.*\b(kitch|bathroom)).*$/i,
-    name: 'Remodeling - Kitchen & Bathroom',
+    name: 'Remodeling. Kitchen and Bathroom',
     categoryId: '291'
   },
   {

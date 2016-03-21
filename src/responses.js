@@ -24,6 +24,7 @@ const QUESTIONS = {
   getDescription: 'What kind of project would you like to start?',
   getUrgency: 'When would you like this done?',
   getPhoneNumber: 'What is your phone number?',
+  getCategory: 'What category best describes your project?',
   confirmPhoneNumber: (currentPhoneNumber) => `Can we still contact you through <say-as interpret-as="spell-out">${currentPhoneNumber}</say-as>?`,
   getStreetAddress: 'What street address will the work be done in?',
   confirmStreetAddress: (currentAddress) => `Will the work occur in ${currentAddress}?`,
@@ -90,6 +91,10 @@ function _getMissingInformation(draftLead = defaultDraftLead, userInfo = default
     console.log('no urgency');
     response.outputSpeech = QUESTIONS.getUrgency;
     response.repromptText = `Say something like ${joinArrayWithDifferentLastJoiner(supportedUrgencies, ',', ' or ')}`;
+  } else if (draftLead.categoryIds.length === 0) {
+    console.log('no category');
+    response.outputSpeech = QUESTIONS.getCategory;
+    response.repromptText = `Say something like ${joinArrayWithDifferentLastJoiner(supportedCategories.slice(0, 2), ', ', ' or ')}.  Say "supported categories" to hear more.`;
   } else if (!draftLead.phone) {
     console.log('no phone #');
     if (!userInfo.phone) {
@@ -183,6 +188,7 @@ function clearDraftData(intent, session, callback) {
 function collectDescription(intent, session, callback) {
   let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
   const draftLead = extend({}, defaultDraftLead, sessionAttributes.draftLead);
+  const userInfo = extend({}, defaultUserInfo, sessionAttributes.userInfo);
   sessionAttributes.previous.draftLead = draftLead;
   let outputSpeech = '';
   let repromptText = '';
@@ -208,8 +214,70 @@ function collectDescription(intent, session, callback) {
       }
     });
     // Extract confirm phone #, if possible
+    if (draftLead.description.indexOf('confirm phone') > 1) {
+      draftLead.phone = userInfo.phone;
+    }
     // Extract confirm address, if possible
+    if (draftLead.description.indexOf('confirm address') > 1) {
+      draftLead.address.streetAddress = userInfo.address.streetAddress;
+    }
     // Extract confirm postal code, if possible
+    if (draftLead.description.indexOf('confirm postal') > 1) {
+      draftLead.address.postalCode = userInfo.address.postalCode;
+    }
+    sessionAttributes.previous.draftLead = sessionAttributes.draftLead;
+  }
+  sessionAttributes.draftLead = extend({}, sessionAttributes.draftLead, draftLead);
+  const getDraftLeadState = _getMissingInformation(sessionAttributes.draftLead, sessionAttributes.userInfo);
+  outputSpeech += getDraftLeadState.outputSpeech;
+  repromptText += getDraftLeadState.repromptText;
+  sessionAttributes.previous.question = getDraftLeadState.outputSpeech;
+  const shouldEndSession = !!getDraftLeadState.shouldEndSession;
+
+  if (shouldEndSession) {
+    const userId = session.user.userId;
+    const appData = sessionAttributes;
+    console.log('app data for ending session: ');
+    console.log(appData);
+    saveAppData(userId, appData, () => {
+      callback(sessionAttributes,
+        buildSSMLSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
+    });
+  } else {
+    callback(sessionAttributes,
+      buildSSMLSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
+  }
+}
+
+function collectCategory(intent, session, callback) {
+  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes, {
+    pageNumber: 0,
+    resultsPerPage: 4
+  });
+  const draftLead = extend({}, defaultDraftLead, sessionAttributes.draftLead);
+  sessionAttributes.previous.draftLead = draftLead;
+  let outputSpeech = '';
+  let repromptText = '';
+  const cardTitle = 'Collect Category.';
+  if (intent.slots.category) {
+    const maybeCategory = intent.slots.category.value;
+    outputSpeech += `Category: ${maybeCategory}. `;
+    // Extract category, if possible
+    regexToCategory.forEach(category => {
+      if (category.regex.test(draftLead.description)) {
+        console.log('category identified!');
+        console.log(category.name);
+        draftLead.categoryIds.push(category.categoryId);
+      } else if (category.name.toLowerCase() === maybeCategory.toLowerCase()) {
+        console.log('category identified! ');
+        console.log(category.name);
+        draftLead.categoryIds.push(category.categoryId);
+      } else if (maybeCategory.toLowerCase().indexOf(category.name.toLowerCase()) > -1) {
+        console.log('category identified! ');
+        console.log(category.name);
+        draftLead.categoryIds.push(category.categoryId);
+      }
+    });
     sessionAttributes.previous.draftLead = sessionAttributes.draftLead;
   }
   sessionAttributes.draftLead = extend({}, sessionAttributes.draftLead, draftLead);
@@ -346,6 +414,54 @@ function helpIntent(session, callback) {
   } else {
     callback(sessionAttributes,
       buildSSMLSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
+  }
+}
+
+function listCategories(session, callback) {
+  let sessionAttributes = extend({
+    pageNumber: 0,
+    resultsPerPage: 4
+  }, session.attributes);
+
+  console.log('page number');
+  console.log(sessionAttributes.pageNumber);
+  console.log('results per page');
+  console.log(sessionAttributes.resultsPerPage);
+
+  const offset = sessionAttributes.pageNumber * sessionAttributes.resultsPerPage;
+
+  console.log('offset');
+  console.log(offset);
+  console.log('offset + results per page: ');
+  console.log(offset + sessionAttributes.resultsPerPage);
+
+  const categoriesToBeRead = supportedCategories.slice(offset, offset + sessionAttributes.resultsPerPage);
+
+  console.log('categoriesToBeRead');
+  console.log(categoriesToBeRead);
+
+  sessionAttributes.pageNumber += 1;
+  if ((sessionAttributes.pageNumber * sessionAttributes.resultsPerPage) + sessionAttributes.resultsPerPage > supportedCategories.length) {
+    sessionAttributes.pageNumber = 0;
+  }
+
+  const outputSpeech = `${categoriesToBeRead.join(', ')}.  Say 'more' to hear more`;
+  const repromptText = sessionAttributes.previous.question;
+  const cardTitle = 'Categories List';
+  const shouldEndSession = false;
+
+  if (shouldEndSession) {
+    const userId = session.user.userId;
+    const appData = sessionAttributes;
+    console.log('app data for ending session: ');
+    console.log(appData);
+    saveAppData(userId, appData, () => {
+      callback(sessionAttributes,
+          buildSSMLSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
+    });
+  } else {
+    callback(sessionAttributes,
+        buildSSMLSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
   }
 }
 
@@ -599,7 +715,11 @@ export function onLaunch(launchRequest, session, callback) {
   const getDraftLeadState = _getMissingInformation(sessionAttributes.draftLead, sessionAttributes.userInfo);
   sessionAttributes.previous.question = getDraftLeadState.outputSpeech;
   sessionAttributes.previous.draftLead = sessionAttributes.draftLead;
-  const outputSpeech = `Hello there: <say-as interpret-as="spell-out">${String(session.user.userId).substring(10, 15)}</say-as>. ${getDraftLeadState.outputSpeech}`;
+  let outputSpeech = `Hello there: <say-as interpret-as="spell-out">${String(session.user.userId).substring(10, 15)}</say-as>. `;
+  if (!getDraftLeadState.outputSpeech === QUESTIONS.getDescription) {
+    outputSpeech += ' I see you already have a draft project in progress.  Let\'s continue. ';
+  }
+  outputSpeech += ` ${getDraftLeadState.outputSpeech}`;
   const repromptText = `${getDraftLeadState.repromptText}`;
   const shouldEndSession = !!getDraftLeadState.shouldEndSession;
 
@@ -628,6 +748,10 @@ export function onIntent(event, context, callback) {
     clearDraftData(intent, session, callback);
   } else if (intentName === 'CollectDescription') {
     collectDescription(intent, session, callback);
+  } else if (intentName === 'CollectCategory') {
+    collectCategory(intent, session, callback);
+  } else if (intentName === 'ListCategories') {
+    listCategories(session, callback);
   } else if (intentName === 'AMAZON.RepeatIntent') {
     repeatIntent(session, callback);
   } else if (intentName === 'AMAZON.StartOverIntent') {
