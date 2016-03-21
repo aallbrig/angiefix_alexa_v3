@@ -17,13 +17,28 @@ export const defaultDraftLead = {
   description: null,
   urgency: null,
   categoryIds: [],
-  complete: false
+  complete: false,
+  phone: null,
+  address: defaultAddress
 };
 
 export const defaultAppUserData = {
   userInfo: defaultUserInfo,
   projects: [],
-  draftLead: null
+  draftLead: defaultDraftLead
+};
+
+export const defaultBuildResponse = {
+  outputSpeech: 'Default build response: please implement output speech',
+  repromptText: 'Default build response: please implement reprompt text',
+  shouldEndSession: false
+};
+
+export const defaultPreviousObject = {
+  previous: {
+    question: null,
+    draftLead: defaultDraftLead
+  }
 };
 
 //

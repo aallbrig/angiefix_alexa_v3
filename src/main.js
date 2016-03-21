@@ -1,6 +1,7 @@
-// Single files are awful!
 import { saveAppData, getAppData } from './db';
 import { onLaunch, onIntent, buildResponse } from './responses';
+import { defaultAppUserData } from './models';
+const extend = require('lodash/extend');
 
 function saveDataBeforeExiting(event, context) {
   const userId = event.session.user.userId;
@@ -50,7 +51,8 @@ export function main(event, context) {
       // Retrieve initial data
       console.log(`onSessionStarted requestId=${event.request.requestId}, sessionId=${event.session.sessionId}`);
       const userId = event.session.user.userId;
-      getAppData(userId, function getAppDataCallback(err, data) {
+      getAppData(userId, (err, data) => {
+        let sessionAttributesFromStore = {session: {attributes: defaultAppUserData}};
         if (err) {
           console.log(`cannot get data for user with id: ${userId}`);
           console.log(err);
@@ -58,11 +60,16 @@ export function main(event, context) {
         } else if (data) {
           console.log(`got data for user with id: ${userId}`);
           console.log(data);
+          sessionAttributesFromStore = {session: {attributes: data.Item}};
           event.session.attributes = data.Item;
         }
         console.log('new event.session');
         console.log(event.session.attributes);
-        routeEventByRequestType(event, context);
+        console.log('extend(sessionAttributesFromStore, event)');
+        console.log(extend(sessionAttributesFromStore, event));
+        console.log('extend(event, sessionAttributesFromStore)');
+        console.log(extend(event, sessionAttributesFromStore));
+        routeEventByRequestType(extend(sessionAttributesFromStore, event), context);
       });
     } else {
       routeEventByRequestType(event, context);

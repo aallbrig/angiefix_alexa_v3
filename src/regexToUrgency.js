@@ -1,6 +1,6 @@
 export const regexToUrgency = [
   {
-    regex: /(^(?=.*\bthis\b)(?=.*\bweek).*$)|(now|ASAP)/i,
+    regex: /(^(?=.*\bthis\b)(?=.*\bweek).*$)|(now|ASAP|tomorrow|today)/i,
     value: 'This week'
   },
   {

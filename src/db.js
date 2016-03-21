@@ -1,5 +1,4 @@
 import { defaultAppUserData } from './models';
-const AWS = require('aws-sdk');
 const DOC = require('dynamodb-doc');
 const docClient = new DOC.DynamoDB();
 const extend = require('lodash/extend');
@@ -8,9 +7,9 @@ function getAppData(userId, callback) {
   docClient.getItem({
     TableName: 'angieFixV2',
     Key: {
-      userId: userId
+      userId
     }
-  }, function(err, data) {
+  }, (err, data) => {
     if (err) {
       console.log('error retrieving');
       console.log(err);
@@ -24,19 +23,19 @@ function getAppData(userId, callback) {
 
 function saveAppData(userId, appData, callback) {
   const dataToBeSaved = extend({
-    userId: userId
+    userId
   }, defaultAppUserData, appData);
   console.log('data to be saved');
   console.log(dataToBeSaved);
   docClient.putItem({
     TableName: 'angieFixV2',
     Item: {
-      userId: userId,
+      userId,
       draftLead: dataToBeSaved.draftLead,
       userInfo: dataToBeSaved.userInfo,
       projects: dataToBeSaved.projects
     }
-  }, function(err, data) {
+  }, (err, data) => {
     if (err) {
       console.log('error saving');
       console.log(err);

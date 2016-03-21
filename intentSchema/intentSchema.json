@@ -10,6 +10,24 @@
       ]
     },
     {
+      "intent": "CollectPhoneNumberOrPostalCode",
+      "slots": [
+        {
+          "name": "phoneNumberOrPostalCode",
+          "type": "AMAZON.NUMBER"
+        }
+      ]
+    },
+    {
+      "intent": "CollectStreetAddress",
+      "slots": [
+        {
+          "name": "streetAddress",
+          "type": "AMAZON.LITERAL"
+        }
+      ]
+    },
+    {
       "intent": "ClearDraftData"
     },
     {
