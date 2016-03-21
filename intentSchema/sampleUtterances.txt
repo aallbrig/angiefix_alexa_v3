@@ -10,6 +10,8 @@ ListCategories What are your categories
 ListCategories Supported categories
 ListCategories Categories
 ListCategories More
+ReviewDraft Review
+ReviewDraft Review my draft
 CollectCategory {category}
 CollectCategory It's {category}
 CollectCategory It's a {category} project

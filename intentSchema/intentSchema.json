@@ -40,6 +40,9 @@
       ]
     },
     {
+      "intent": "ReviewDraft"
+    },
+    {
       "intent": "ClearDraftData"
     },
     {

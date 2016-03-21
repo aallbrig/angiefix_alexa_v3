@@ -196,7 +196,6 @@ function collectDescription(intent, session, callback) {
   if (intent.slots.description) {
     draftLead.description = intent.slots.description.value;
     draftLead.title = `Alexa Lead - ${draftLead.description.substring(0, 40)}...`;
-    outputSpeech += `Description: ${draftLead.description}`;
     // Extract ugency, if possible
     regexToUrgency.forEach(urgency => {
       if (urgency.regex.test(draftLead.description)) {
@@ -205,6 +204,9 @@ function collectDescription(intent, session, callback) {
         draftLead.urgency = urgency.value;
       }
     });
+    if (!draftLead.urgency) {
+      draftLead.urgency = regexToUrgency[0].value;
+    }
     // Extract category, if possible
     regexToCategory.forEach(category => {
       if (category.regex.test(draftLead.description)) {
@@ -216,15 +218,19 @@ function collectDescription(intent, session, callback) {
     // Extract confirm phone #, if possible
     if (draftLead.description.indexOf('confirm phone') > 1) {
       draftLead.phone = userInfo.phone;
+      draftLead.description = draftLead.description.replace('confirm phone', '');
     }
     // Extract confirm address, if possible
     if (draftLead.description.indexOf('confirm address') > 1) {
       draftLead.address.streetAddress = userInfo.address.streetAddress;
+      draftLead.description = draftLead.description.replace('confirm address', '');
     }
     // Extract confirm postal code, if possible
     if (draftLead.description.indexOf('confirm postal') > 1) {
       draftLead.address.postalCode = userInfo.address.postalCode;
+      draftLead.description = draftLead.description.replace('confirm postal', '');
     }
+    outputSpeech += `Description: ${draftLead.description}`;
     sessionAttributes.previous.draftLead = sessionAttributes.draftLead;
   }
   sessionAttributes.draftLead = extend({}, sessionAttributes.draftLead, draftLead);
@@ -465,9 +471,78 @@ function listCategories(session, callback) {
   }
 }
 
+function reviewDraft(session, callback) {
+  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
+  console.log('review draft');
+  console.log('Review Draft');
+  const draftLead = extend({}, defaultDraftLead, sessionAttributes.draftLead);
+  const cardTitle = 'Review Draft';
+
+  let outputSpeech = '';
+  let repromptText;
+
+  if (draftLead.description) {
+    console.log(`have description: ${draftLead.description}`);
+    outputSpeech += `description: ${draftLead.description}. `
+  }
+  if (draftLead.urgency) {
+    console.log(`have urgency: ${draftLead.urgency}`);
+    outputSpeech += `urgency: ${draftLead.urgency}. `
+  }
+  if (draftLead.categoryIds.length) {
+    const draftCategories = regexToCategory.filter((category) => {
+      console.log(`category ${category.categoryId}: ${category.name} - ${draftLead.categoryIds.indexOf(category.categoryId) > -1}`);
+      console.log(category);
+      return draftLead.categoryIds.indexOf(category.categoryId) > -1;
+    }).map((category) => category.name);
+    console.log(`have categoryIds: ${draftCategories.join(', ')}`);
+    if (draftCategories.length) {
+      outputSpeech += `categories: ${draftCategories.join(', ')}. `;
+    }
+  }
+  if (draftLead.phone) {
+    console.log(`have phone: ${draftLead.phone}`);
+    outputSpeech += `phone: <say-as interpret-as="spell-out">${draftLead.phone}</say-as>. `;
+  }
+  if (draftLead.address.streetAddress) {
+    console.log(`have street address: ${draftLead.address.streetAddress}`);
+    outputSpeech += `street address: ${draftLead.address.streetAddress}. `;
+  }
+  if (draftLead.address.postalCode) {
+    console.log(`have postal code: ${draftLead.address.postalCode}`);
+    outputSpeech += `postal code: <say-as interpret-as="spell-out">${draftLead.address.postalCode}</say-as>. `;
+  }
+
+  if (!(sessionAttributes.previous || {}).question) {
+    const getDraftLeadState = _getMissingInformation(
+      sessionAttributes.draftLead,
+      sessionAttributes.userInfo
+    );
+    sessionAttributes.previous.question = getDraftLeadState.outputSpeech;
+    repromptText = sessionAttributes.previous.question
+  } else {
+    repromptText = sessionAttributes.previous.question
+  }
+  const shouldEndSession = false;
+
+  if (shouldEndSession) {
+    const userId = session.user.userId;
+    const appData = sessionAttributes;
+    console.log('app data for ending session: ');
+    console.log(appData);
+    saveAppData(userId, appData, () => {
+      callback(sessionAttributes,
+          buildSSMLSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
+    });
+  } else {
+    callback(sessionAttributes,
+        buildSSMLSpeechletResponse(cardTitle, outputSpeech, repromptText, shouldEndSession));
+  }
+}
+
 function repeatIntent(session, callback) {
   let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
-  console.log('repeatIntent ');
+  console.log('repeat intent');
   const cardTitle = 'Repeat';
 
   const getDraftLeadState = _getMissingInformation(
@@ -752,6 +827,8 @@ export function onIntent(event, context, callback) {
     collectCategory(intent, session, callback);
   } else if (intentName === 'ListCategories') {
     listCategories(session, callback);
+  } else if (intentName === 'ReviewDraft') {
+    reviewDraft(session, callback);
   } else if (intentName === 'AMAZON.RepeatIntent') {
     repeatIntent(session, callback);
   } else if (intentName === 'AMAZON.StartOverIntent') {
