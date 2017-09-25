@@ -47,7 +47,6 @@ export function main(event, context) {
     console.log(event.session.user);
     console.log('userId');
     console.log(event.session.user.userId);
-    // amzn1.echo-sdk-account.AHRNUYGNDJBA4UNHHZBZYV4N35ITPIZJTSPT4OZ6U2D27GXSUZZWW
 
     if (event.session.new) {
       // Retrieve initial data
