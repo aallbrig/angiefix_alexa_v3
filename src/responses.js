@@ -1,23 +1,16 @@
 import { saveAppData } from './db';
 import { regexToUrgency, supportedUrgencies } from './regexToUrgency';
 import { regexToCategory, supportedCategories } from './regexToCategory';
-import { defaultDraftLead, defaultBuildResponse, defaultPreviousObject, defaultUserInfo } from './models';
+import {
+  defaultDraftLead, defaultBuildResponse, defaultPreviousObject, defaultUserInfo
+} from './models';
 import { joinArrayWithDifferentLastJoiner } from './utilities';
 const extend = require('lodash/extend');
-
-// console.log('regexToUrgency');
-// console.log(regexToUrgency);
-// console.log('regexToCategory');
-// console.log(regexToCategory);
-console.log('supportedUrgencies');
-console.log(supportedUrgencies);
-console.log('supportedCategories');
-console.log(supportedCategories);
 
 const validation = {
   phoneNumber: /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/,
   postalCode: /^\d{5}(?:[-\s]\d{4})?$/
-}
+};
 
 const QUESTIONS = {
   getSubmit: 'Your project is ready.  Would you like to submit?',
@@ -25,11 +18,13 @@ const QUESTIONS = {
   getUrgency: 'When would you like this done?',
   getPhoneNumber: 'What is your phone number?',
   getCategory: 'What category best describes your project?',
-  confirmPhoneNumber: (currentPhoneNumber) => `Can we still contact you through <say-as interpret-as="spell-out">${currentPhoneNumber}</say-as>?`,
+  confirmPhoneNumber: (currentPhoneNumber) =>
+    `Can we still contact you through <say-as interpret-as="spell-out">${currentPhoneNumber}</say-as>?`,
   getStreetAddress: 'What street address will the work be done in?',
   confirmStreetAddress: (currentAddress) => `Will the work occur in ${currentAddress}?`,
   getPostalCode: 'What is your zip code?',
-  confirmPostalCode: (currentPostalCode) => `Is postal code <say-as interpret-as="spell-out">${currentPostalCode}</say-as> still correct?`,
+  confirmPostalCode: (currentPostalCode) =>
+    `Is postal code <say-as interpret-as="spell-out">${currentPostalCode}</say-as> still correct?`,
   startAnotherProject: 'Would you like to start another project?'
 };
 
@@ -69,10 +64,6 @@ function saveDataBeforeExiting(event, context) {
   });
 }
 
-function setData({ sessionAttributes = {}, name = '', value = '' }) {
-  return extend({}, sessionAttributes, { [name]: value });
-}
-
 /*
 (draftLead, userInfo) => {
   shouldEndSession:Boolean,
@@ -90,7 +81,8 @@ function _getMissingInformation(draftLead = defaultDraftLead, userInfo = default
   } else if (!draftLead.urgency) {
     console.log('no urgency');
     response.outputSpeech = QUESTIONS.getUrgency;
-    response.repromptText = `Say something like ${joinArrayWithDifferentLastJoiner(supportedUrgencies, ',', ' or ')}`;
+    response.repromptText =
+      `Say something like ${joinArrayWithDifferentLastJoiner(supportedUrgencies, ',', ' or ')}`;
   } else if (draftLead.categoryIds.length === 0) {
     console.log('no category');
     response.outputSpeech = QUESTIONS.getCategory;
@@ -142,7 +134,7 @@ function _getMissingInformation(draftLead = defaultDraftLead, userInfo = default
 
 // --------------- Functions that control the skill's behavior -----------------------
 function clearUserData(intent, session, callback) {
-  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
+  const sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
   const outputSpeech = 'clearing user data';
   const repromptText = '';
   const cardTitle = 'Clearing User Data';
@@ -164,7 +156,7 @@ function clearUserData(intent, session, callback) {
   }
 }
 function clearDraftData(intent, session, callback) {
-  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
+  const sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
   sessionAttributes.draftLead = defaultDraftLead;
   const outputSpeech = 'clearing draft Data';
   const repromptText = '';
@@ -186,7 +178,7 @@ function clearDraftData(intent, session, callback) {
   }
 }
 function collectDescription(intent, session, callback) {
-  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
+  const sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
   const draftLead = extend({}, defaultDraftLead, sessionAttributes.draftLead);
   const userInfo = extend({}, defaultUserInfo, sessionAttributes.userInfo);
   sessionAttributes.previous.draftLead = draftLead;
@@ -234,7 +226,10 @@ function collectDescription(intent, session, callback) {
     sessionAttributes.previous.draftLead = sessionAttributes.draftLead;
   }
   sessionAttributes.draftLead = extend({}, sessionAttributes.draftLead, draftLead);
-  const getDraftLeadState = _getMissingInformation(sessionAttributes.draftLead, sessionAttributes.userInfo);
+  const getDraftLeadState = _getMissingInformation(
+    sessionAttributes.draftLead,
+    sessionAttributes.userInfo
+  );
   outputSpeech += getDraftLeadState.outputSpeech;
   repromptText += getDraftLeadState.repromptText;
   sessionAttributes.previous.question = getDraftLeadState.outputSpeech;
@@ -256,7 +251,7 @@ function collectDescription(intent, session, callback) {
 }
 
 function collectCategory(intent, session, callback) {
-  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes, {
+  const sessionAttributes = extend({}, defaultPreviousObject, session.attributes, {
     pageNumber: 0,
     resultsPerPage: 4
   });
@@ -321,22 +316,24 @@ function collectPhoneNumberOrPostalCode(intent, session, callback) {
   let outputSpeech = '';
   let repromptText = '';
   const cardTitle = 'Collect description.';
-  if (intent.slots.phoneNumberOrPostalCode &&
-    intent.slots.phoneNumberOrPostalCode.value.match(validation.phoneNumber))
-  {
+  if (
+    intent.slots.phoneNumberOrPostalCode &&
+    intent.slots.phoneNumberOrPostalCode.value.match(validation.phoneNumber)
+  ) {
     draftLead.phone = intent.slots.phoneNumberOrPostalCode.value;
     userInfo.phone = intent.slots.phoneNumberOrPostalCode.value;
     console.log(`phone number collected! ${draftLead.phone}`);
     outputSpeech += ` Phone: <say-as interpret-as="spell-out">${draftLead.phone}</say-as>. `;
-  } else if (intent.slots.phoneNumberOrPostalCode &&
-    intent.slots.phoneNumberOrPostalCode.value.match(validation.postalCode))
-  {
+  } else if (
+    intent.slots.phoneNumberOrPostalCode &&
+    intent.slots.phoneNumberOrPostalCode.value.match(validation.postalCode)
+  ) {
     draftLead.address.postalCode = intent.slots.phoneNumberOrPostalCode.value;
     userInfo.address.postalCode = intent.slots.phoneNumberOrPostalCode.value;
     console.log(`postal code collected! ${draftLead.address.postalCode}`);
     outputSpeech += ` Zip code: <say-as interpret-as="spell-out">${draftLead.address.postalCode}</say-as>. `;
   }
-  sessionAttributes = extend({}, sessionAttributes, {draftLead, userInfo});
+  sessionAttributes = extend({}, sessionAttributes, { draftLead, userInfo });
   const getDraftLeadState = _getMissingInformation(
     sessionAttributes.draftLead,
     sessionAttributes.userInfo
@@ -376,7 +373,7 @@ function collectStreetAddress(intent, session, callback) {
     console.log(`street address exists! ${draftLead.address.streetAddress}`);
     outputSpeech += ` You said: ${draftLead.address.streetAddress}. `;
   }
-  sessionAttributes = extend({}, sessionAttributes, {draftLead, userInfo});
+  sessionAttributes = extend({}, sessionAttributes, { draftLead, userInfo });
   const getDraftLeadState = _getMissingInformation(
     sessionAttributes.draftLead,
     sessionAttributes.userInfo
@@ -402,7 +399,7 @@ function collectStreetAddress(intent, session, callback) {
 }
 
 function helpIntent(session, callback) {
-  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
+  const sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
   const outputSpeech = 'Help';
   const repromptText = 'Help';
   const cardTitle = 'Help';
@@ -424,7 +421,7 @@ function helpIntent(session, callback) {
 }
 
 function listCategories(session, callback) {
-  let sessionAttributes = extend({
+  const sessionAttributes = extend({
     pageNumber: 0,
     resultsPerPage: 4
   }, session.attributes);
@@ -472,7 +469,7 @@ function listCategories(session, callback) {
 }
 
 function reviewDraft(session, callback) {
-  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
+  const sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
   console.log('review draft');
   console.log('Review Draft');
   const draftLead = extend({}, defaultDraftLead, sessionAttributes.draftLead);
@@ -519,9 +516,9 @@ function reviewDraft(session, callback) {
       sessionAttributes.userInfo
     );
     sessionAttributes.previous.question = getDraftLeadState.outputSpeech;
-    repromptText = sessionAttributes.previous.question
+    repromptText = sessionAttributes.previous.question;
   } else {
-    repromptText = sessionAttributes.previous.question
+    repromptText = sessionAttributes.previous.question;
   }
   const shouldEndSession = false;
 
@@ -541,7 +538,7 @@ function reviewDraft(session, callback) {
 }
 
 function repeatIntent(session, callback) {
-  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
+  const sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
   console.log('repeat intent');
   const cardTitle = 'Repeat';
 
@@ -570,8 +567,7 @@ function repeatIntent(session, callback) {
 }
 
 function startOverIntent(session, callback) {
-  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
-  const userInfo = extend({}, defaultUserInfo, sessionAttributes.userInfo);
+  const sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
   console.log('startOverIntent ');
   const cardTitle = 'Restart';
 
@@ -617,7 +613,7 @@ function yesIntent(session, callback) {
 
   if (previousQuestion === QUESTIONS.confirmStreetAddress(userInfo.address.streetAddress)) {
     draftLead.address.streetAddress = userInfo.address.streetAddress;
-    sessionAttributes = extend({}, sessionAttributes, {draftLead, userInfo});
+    sessionAttributes = extend({}, sessionAttributes, { draftLead, userInfo });
     const getDraftLeadState = _getMissingInformation(
       sessionAttributes.draftLead,
       sessionAttributes.userInfo
@@ -626,10 +622,9 @@ function yesIntent(session, callback) {
     outputSpeech = getDraftLeadState.outputSpeech;
     repromptText = getDraftLeadState.repromptText;
     shouldEndSession = !!getDraftLeadState.shouldEndSession;
-
   } else if (previousQuestion === QUESTIONS.confirmPhoneNumber(userInfo.phone)) {
     draftLead.phone = userInfo.phone;
-    sessionAttributes = extend({}, sessionAttributes, {draftLead, userInfo});
+    sessionAttributes = extend({}, sessionAttributes, { draftLead, userInfo });
     const getDraftLeadState = _getMissingInformation(
       sessionAttributes.draftLead,
       sessionAttributes.userInfo
@@ -638,10 +633,9 @@ function yesIntent(session, callback) {
     outputSpeech = getDraftLeadState.outputSpeech;
     repromptText = getDraftLeadState.repromptText;
     shouldEndSession = !!getDraftLeadState.shouldEndSession;
-
   } else if (previousQuestion === QUESTIONS.confirmPostalCode(userInfo.address.postalCode)) {
     draftLead.address.postalCode = userInfo.address.postalCode;
-    sessionAttributes = extend({}, sessionAttributes, {draftLead, userInfo});
+    sessionAttributes = extend({}, sessionAttributes, { draftLead, userInfo });
     const getDraftLeadState = _getMissingInformation(
       sessionAttributes.draftLead,
       sessionAttributes.userInfo
@@ -650,7 +644,6 @@ function yesIntent(session, callback) {
     outputSpeech = getDraftLeadState.outputSpeech;
     repromptText = getDraftLeadState.repromptText;
     shouldEndSession = !!getDraftLeadState.shouldEndSession;
-
   } else if (previousQuestion === QUESTIONS.getSubmit) {
     const followUpQuestion = QUESTIONS.startAnotherProject;
     outputSpeech = `Your project has been submitted! ${followUpQuestion}`;
@@ -673,7 +666,6 @@ function yesIntent(session, callback) {
     sessionAttributes.previous.question = followUpQuestion;
     shouldEndSession = false;
     repromptText = followUpQuestion;
-
   } else if (previousQuestion === QUESTIONS.startAnotherProject) {
     const getDraftLeadState = _getMissingInformation(
       sessionAttributes.draftLead,
@@ -683,7 +675,6 @@ function yesIntent(session, callback) {
     outputSpeech = getDraftLeadState.outputSpeech;
     repromptText = getDraftLeadState.repromptText;
     shouldEndSession = !!getDraftLeadState.shouldEndSession;
-
   } else {
     outputSpeech = 'Yes';
     repromptText = 'Yes';
@@ -721,7 +712,7 @@ function noIntent(session, callback) {
 
   if (previousQuestion === QUESTIONS.confirmStreetAddress(userInfo.address.streetAddress)) {
     userInfo.address.streetAddress = defaultUserInfo.address.streetAddress;
-    sessionAttributes = extend({}, sessionAttributes, {draftLead, userInfo});
+    sessionAttributes = extend({}, sessionAttributes, { draftLead, userInfo });
     const getDraftLeadState = _getMissingInformation(
       sessionAttributes.draftLead,
       sessionAttributes.userInfo
@@ -730,10 +721,9 @@ function noIntent(session, callback) {
     outputSpeech = getDraftLeadState.outputSpeech;
     repromptText = getDraftLeadState.repromptText;
     shouldEndSession = !!getDraftLeadState.shouldEndSession;
-
   } else if (previousQuestion === QUESTIONS.confirmPhoneNumber(userInfo.phone)) {
     userInfo.phone = defaultUserInfo.phone;
-    sessionAttributes = extend({}, sessionAttributes, {draftLead, userInfo});
+    sessionAttributes = extend({}, sessionAttributes, { draftLead, userInfo });
     const getDraftLeadState = _getMissingInformation(
       sessionAttributes.draftLead,
       sessionAttributes.userInfo
@@ -742,10 +732,9 @@ function noIntent(session, callback) {
     outputSpeech = getDraftLeadState.outputSpeech;
     repromptText = getDraftLeadState.repromptText;
     shouldEndSession = !!getDraftLeadState.shouldEndSession;
-
   } else if (previousQuestion === QUESTIONS.confirmPostalCode(userInfo.address.postalCode)) {
     userInfo.address.postalCode = defaultUserInfo.address.postalCode;
-    sessionAttributes = extend({}, sessionAttributes, {draftLead, userInfo});
+    sessionAttributes = extend({}, sessionAttributes, { draftLead, userInfo });
     const getDraftLeadState = _getMissingInformation(
       sessionAttributes.draftLead,
       sessionAttributes.userInfo
@@ -754,7 +743,6 @@ function noIntent(session, callback) {
     outputSpeech = getDraftLeadState.outputSpeech;
     repromptText = getDraftLeadState.repromptText;
     shouldEndSession = !!getDraftLeadState.shouldEndSession;
-
   } else {
     outputSpeech = 'No';
     shouldEndSession = true;
@@ -781,13 +769,16 @@ function noIntent(session, callback) {
 export function onLaunch(launchRequest, session, callback) {
   console.log(`onLaunch requestId=${launchRequest.requestId}, sessionId=${session.sessionId}`);
 
-  let sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
+  const sessionAttributes = extend({}, defaultPreviousObject, session.attributes);
   console.log('on launch session object');
   console.log(session);
   console.log('on launch session attributes object');
   console.log(sessionAttributes);
   const cardTitle = 'Welcome';
-  const getDraftLeadState = _getMissingInformation(sessionAttributes.draftLead, sessionAttributes.userInfo);
+  const getDraftLeadState = _getMissingInformation(
+    sessionAttributes.draftLead,
+    sessionAttributes.userInfo
+  );
   sessionAttributes.previous.question = getDraftLeadState.outputSpeech;
   sessionAttributes.previous.draftLead = sessionAttributes.draftLead;
   let outputSpeech = `Hello there: <say-as interpret-as="spell-out">${String(session.user.userId).substring(10, 15)}</say-as>. `;

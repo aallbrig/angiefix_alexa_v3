@@ -18,14 +18,14 @@ function routeEventByRequestType(event, context) {
   if (event.request.type === 'LaunchRequest') {
     onLaunch(event.request,
       event.session,
-      function callback(sessionAttributes, speechletResponse) {
+      (sessionAttributes, speechletResponse) => {
         context.succeed(buildResponse(sessionAttributes, speechletResponse));
       });
   } else if (event.request.type === 'IntentRequest') {
     onIntent(
       event,
       context,
-      function callback(sessionAttributes, speechletResponse) {
+      (sessionAttributes, speechletResponse) => {
         context.succeed(buildResponse(sessionAttributes, speechletResponse));
       });
   } else if (event.request.type === 'SessionEndedRequest') {
@@ -36,7 +36,9 @@ function routeEventByRequestType(event, context) {
 // MAIN
 export function main(event, context) {
   try {
-    console.log(`event.session.application.applicationId=${event.session.application.applicationId}`);
+    console.log(
+      `event.session.application.applicationId=${event.session.application.applicationId}`
+    );
     console.log('event');
     console.log(event);
     console.log('context');
@@ -49,10 +51,16 @@ export function main(event, context) {
 
     if (event.session.new) {
       // Retrieve initial data
-      console.log(`onSessionStarted requestId=${event.request.requestId}, sessionId=${event.session.sessionId}`);
+      console.log(
+        `onSessionStarted requestId=${event.request.requestId}, sessionId=${event.session.sessionId}`
+      );
       const userId = event.session.user.userId;
       getAppData(userId, (err, data) => {
-        let sessionAttributesFromStore = {session: {attributes: defaultAppUserData}};
+        let sessionAttributesFromStore = {
+          session: {
+            attributes: defaultAppUserData
+          }
+        };
         if (err) {
           console.log(`cannot get data for user with id: ${userId}`);
           console.log(err);
@@ -60,7 +68,11 @@ export function main(event, context) {
         } else if (data) {
           console.log(`got data for user with id: ${userId}`);
           console.log(data);
-          sessionAttributesFromStore = {session: {attributes: data.Item}};
+          sessionAttributesFromStore = {
+            session: {
+              attributes: data.Item
+            }
+          };
           event.session.attributes = data.Item;
         }
         console.log('new event.session');
@@ -77,4 +89,4 @@ export function main(event, context) {
   } catch (e) {
     context.fail(`Exception: ${e}`);
   }
-};
+}

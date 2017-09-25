@@ -68,46 +68,17 @@ const defaultSimpleCard = {
     content: 'Angie - Default Card Content'
   }
 };
-//
-// const defaultResponse = extend();
-//
-// const defaultSSMLResponse = {
-//   'outputSpeech': {
-//     'type': 'SSML',
-//     'ssml': `<speak>${output}</speak>`
-//   },
-//   card: {
-//     type: 'Simple',
-//     title: 'Angie - ' + title,
-//     content: 'Angie - ' + output
-//   },
-//   reprompt: {
-//     outputSpeech: {
-//       'type': 'SSML',
-//       'ssml': `<speak>${repromptText}</speak>`
-//     },
-//   },
-//   shouldEndSession: shouldEndSession
-// };
-
-// // Note: Authorization Url set up within amazon dev portal must return HTML
-// const defaultLinkAccountCard = {
-//   card: {
-//     type: 'LinkAccount'
-//   }
-// };
 
 const defaultShouldEndSession = {
   shouldEndSession: true
 };
 
-// You HAVE to call this function with {} if you are not passing in parameters!
 export function generateResponse({
   outputSpeech = defaultOutputSpeech || defaultSSMLOutputSpeech,
   card = defaultSimpleCard,
   reprompt = defaultSSMLRepromptOutputSpeech,
   shouldEndSession = defaultShouldEndSession
-}) {
+} = {}) {
   return extend(
     {},
     outputSpeech,
